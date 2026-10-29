@@ -1,41 +1,46 @@
-This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
+# ECHO
 
-## Expo has changed — do not trust your training data
+Portrait survival game. The player drags a white orb. After 10 seconds, Echo 1 replays that path from 10 seconds earlier. Echo 2 uses 20 seconds, then 30, 40, and 50, up to five rings. Echoes copy recorded samples. They do not chase.
 
-Expo ships breaking changes every SDK release. APIs you remember are likely renamed, moved, or removed. Before writing any code that touches an Expo, EAS, or React Native API:
+## Stack
 
-1. Read the major version of the `expo` package in `package.json`.
-2. Fetch the matching versioned docs: `https://docs.expo.dev/versions/v<major>.0.0/`
-3. For anything else, fetch https://docs.expo.dev/llms.txt — an index of all Expo docs with corrections to common LLM misconceptions. Follow its links to the specific page you need; never answer from memory.
+TypeScript, Expo SDK 58, React Native 0.88. Confirm `expo` in `package.json` and use the matching docs at `https://docs.expo.dev/versions/v58.0.0/` before changing an Expo API. Install native modules with `npx expo install`.
+
+Skia, Gesture Handler 3 (`usePanGesture`), Reanimated, AsyncStorage, `expo-audio`, and `expo-haptics` are part of this SDK. Do not add login, networking, ads, or notification permission.
+
+## Layout
+
+- `src/game/core` — 60Hz tick, accumulator, seeded RNG, history ring
+- `src/game/systems` — input integration, echoes, collectibles, collision, score
+- `src/game/render` — Skia picture, gestures
+- `src/screens` — splash, home, settings, how to play, game
+- `src/storage` — best score and preferences
+- `src/audio` — optional effects
+
+Screens are a state switch in `App.tsx`. The game loop stays mounted under the overlays. Do not move collision into React state or into the canvas.
+
+## Rules that tests lock
+
+- History lookup of an overwritten tick is undefined. Interpolation needs both neighbors.
+- An echo spawns only when `history.get(tick - delayTicks)` exists.
+- Lethal collision uses the echo body, not `trail`.
+- Collectibles stay out of the player, echoes, other diamonds, and the edge margin.
+- Pause, a backward timestamp, and a multi-second frame gap do not fast-forward the run.
+- `resetSimulation` clears tick, history, echoes, score, energy, and the pointer.
 
 ## Commands
 
-Use `bunx` instead of `npx` if the project uses bun (`bun.lock` present).
-
 ```bash
-npx expo install <package>  # ALWAYS use instead of npm/yarn/pnpm/bun add — resolves SDK-compatible versions
-npx expo start              # start the dev server
-npx expo lint               # lint
-npx tsc --noEmit            # typecheck
-npx expo-doctor             # diagnose dependency and config issues
-npx expo install --fix      # fix incompatible package versions
+npm test
+npm run typecheck
+npm run lint
+npx expo start
 ```
 
-Run lint and typecheck before declaring any task done.
+## Done
 
-## Navigation & Routing
+Tests, `tsc --noEmit`, and lint pass. Device frame rate is reported only when it was measured. Read `.claude/skills/echo-gameplay-engine/SKILL.md`, `echo-mobile-visuals`, and `echo-quality-gates` before changing those areas. Cursor loads `.cursor/rules/echo.mdc` automatically. The skill files are project docs, not runtime imports.
 
-- Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
-- Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
-- Docs: https://docs.expo.dev/router/introduction.md
+## Expo notes carried forward
 
-## Building with EAS
-
-Use EAS to build, sign, and submit the app in the cloud (`eas build`, `eas submit`) and to ship over-the-air updates (`eas update`) — no local Xcode or Android Studio required. Run EAS CLI as `bunx eas-cli <command>` in Bun projects, or `npx eas-cli@latest <command>` otherwise; substitute that for bare `eas` in docs examples.
-Docs: https://docs.expo.dev/eas/index.md
-
-## Rules
-
-- If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
-- Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
-- Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+`ios/` and `android/` are generated. Change native behavior through `app.json` and config plugins. Expo Go for SDK 58 can run this project. A store build still needs `expo run` or EAS.

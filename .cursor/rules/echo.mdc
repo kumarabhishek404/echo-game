@@ -1,0 +1,13 @@
+---
+description: ECHO gameplay invariants, architecture, and verification commands.
+alwaysApply: true
+---
+
+# ECHO
+
+TypeScript Expo game. Read `AGENTS.md` before changing gameplay, rendering, or release docs. Read `.claude/skills/echo-gameplay-engine/SKILL.md`, `echo-mobile-visuals`, or `echo-quality-gates` when the change touches that area. Skills are docs, not runtime dependencies.
+
+- Keep collision, history, and scoring in pure TypeScript under `src/game`. Echoes replay recorded samples only. Trails are not lethal.
+- Do not call React setState on every simulation tick.
+- Do not add login, networking, ads, or notification permission.
+- Run `npm test`, `npm run typecheck`, and `npm run lint` after gameplay changes. Do not claim device performance that was not measured.
